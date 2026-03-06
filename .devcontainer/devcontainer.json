@@ -1,0 +1,36 @@
+{
+      "name": "Campanha Digital 2026",
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+          "features": {
+                "node": "20",
+                    "docker-in-docker": "latest"
+          },
+            "customizations": {
+                    "vscode": {
+                              "extensions": [
+                                        "Prisma.prisma",
+                                                "dbaeumer.vscode-eslint",
+                                                        "esbenp.prettier-vscode",
+                                                                "eamodio.gitlens",
+                                                                        "bradlc.vscode-tailwindcss",
+                                                                                "Firebase.firebase-tools",
+                                                                                        "supabase.supabase",
+                                                                                                "rangav.vscode-thunder-client",
+                                                                                                        "github.vscode-pull-request-github",
+                                                                                                                "ms-azuretools.vscode-docker"
+                              ],
+                                    "settings": {
+                                                "editor.formatOnSave": true,
+                                                        "eslint.format.enable": true,
+                                                                "editor.codeActionsOnSave": {
+                                                                              "source.fixAll.eslint": true
+                                                                },
+                                                                        "tailwindCSS.includeLanguages": {
+                                                                                      "typescript": "javascript"
+                                                                        },
+                                                                                "typescript.preferences.importModuleSpecifier": "relative"
+                                    }
+                    }
+            },
+              "postCreateCommand": "npm install && npx prisma generate"
+}
