@@ -32,9 +32,7 @@ export const metadata: Metadata = {
                                                                         <link rel="icon" href="/icons/icon-192.png" />
                                                                               </head>
                                                                                     <body className="bg-black text-white">
-                                                                                            <PushNotificationProvider>
-                                                                                                      {children}
-                                                                                                              </PushNotificationProvider>
+                                                                                            <PushNotificationProvider />
                                                                                                                       <script
                                                                                                                                 dangerouslySetInnerHTML={{
                                                                                                                                             __html: `
