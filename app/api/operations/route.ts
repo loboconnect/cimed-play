@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Enviar notificação em background (não bloquear resposta)
-          sendPushNotification(tokens, notificationPayload)
+          sendPushNotification(tokens, "🚨 ALERTA CRÍTICO - Synapse", notificationPayload.body, notificationPayload.data)
             .then(response => {
               console.log(`Critical notification sent for ${commandType}:`, {
                 successCount: response.successCount,
