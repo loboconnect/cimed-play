@@ -6,3 +6,5 @@ node_modules
 .env.production
 .DS_Store
 node_modules/
+node_modules/
+.next/
