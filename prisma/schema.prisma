@@ -23,3 +23,14 @@ model LogAuditoria {
                 dado_depois    String
                   createdAt      DateTime @default(now())
 }
+
+model OperationalCommand {
+      id          String   @id @default(uuid())
+        commandType String
+          payload     Json?
+            issuedBy    String
+              status      String   @default("pending")
+                createdAt   DateTime @default(now())
+
+                  @@map("operational_commands")
+}

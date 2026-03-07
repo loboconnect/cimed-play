@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PushNotificationProvider } from "@/components/PushNotificationProvider";
 
 export const metadata: Metadata = {
   title: "Campanha Digital 2026",
@@ -31,7 +32,9 @@ export default function RootLayout({
         <link rel="icon" href="/icons/icon-192.png" />
       </head>
       <body className="bg-black text-white">
-        {children}
+        <PushNotificationProvider>
+          {children}
+        </PushNotificationProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -1,7 +1,0 @@
-exports.id=443,exports.ids=[443],exports.modules={9147:()=>{},9869:(e,t,r)=>{Promise.resolve().then(r.t.bind(r,3724,23)),Promise.resolve().then(r.t.bind(r,5365,23)),Promise.resolve().then(r.t.bind(r,4900,23)),Promise.resolve().then(r.t.bind(r,4714,23)),Promise.resolve().then(r.t.bind(r,5392,23)),Promise.resolve().then(r.t.bind(r,8898,23))},5345:(e,t,r)=>{"use strict";r.r(t),r.d(t,{default:()=>RootLayout,metadata:()=>s,viewport:()=>o});var i=r(4656);r(7272);let s={title:"Campanha Digital 2026",description:"Sistema de transmiss\xe3o de campanha eleitoral",manifest:"/manifest.json",appleWebApp:{capable:!0,statusBarStyle:"black-translucent"}},o={themeColor:"#000000",width:"device-width",initialScale:1};function RootLayout({children:e}){return(0,i.jsxs)("html",{lang:"pt-BR",children:[(0,i.jsxs)("head",{children:[i.jsx("meta",{name:"viewport",content:"width=device-width, initial-scale=1"}),i.jsx("meta",{name:"theme-color",content:"#000000"}),i.jsx("link",{rel:"manifest",href:"/manifest.json"}),i.jsx("link",{rel:"icon",href:"/icons/icon-192.png"})]}),(0,i.jsxs)("body",{className:"bg-black text-white",children:[e,i.jsx("script",{dangerouslySetInnerHTML:{__html:`
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js')
-                  .then(reg => console.log('Service Worker registrado', reg))
-                  .catch(err => console.log('Erro ao registrar SW', err));
-              }
-            `}})]})]})}},7272:()=>{}};
