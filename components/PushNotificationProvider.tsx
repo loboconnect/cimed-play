@@ -15,47 +15,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 export default function PushNotificationProvider() {
-
   useEffect(() => {
-
     const setupPush = async () => {
-
       if (!('Notification' in window)) return
-
       const permission = await Notification.requestPermission()
-
       if (permission !== 'granted') return
-
       const messaging = getMessaging(app)
-
       try {
-
         const token = await getToken(messaging, {
           vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
         })
-
         if (!token) return
-
         await fetch('/api/notifications/register-device', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fcm_token: token,
-            device_type: 'web'
-          })
+          body: JSON.stringify({ fcm_token: token, device_type: 'web' })
         })
-
-        console.log("FCM token registered")
-
       } catch (err) {
         console.error('FCM error', err)
       }
-
     }
-
     setupPush()
-
   }, [])
-
   return null
 }

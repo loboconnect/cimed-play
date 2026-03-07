@@ -1,3 +1,4 @@
+import PushNotificationProvider from '@/components/PushNotificationProvider'
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { PushNotificationProvider } from "@/components/PushNotificationProvider";
