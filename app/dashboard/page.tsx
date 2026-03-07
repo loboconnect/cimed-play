@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
-import { usePushNotifications } from "@/components/PushNotificationProvider";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
