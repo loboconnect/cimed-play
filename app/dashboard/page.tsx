@@ -13,6 +13,11 @@ export default function Dashboard() {
     "[INFO] Aguardando comando do operador",
   ]);
   const router = useRouter();
+  const isSupported = false
+  const isPermissionGranted = false
+  const fcmToken = null
+  const requestPermission = async () => {}
+  const pushError = null
 
   useEffect(() => {
     const getUser = async () => {
