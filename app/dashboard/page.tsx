@@ -1,6 +1,5 @@
-
-export const dynamic = "force-dynamic"
 "use client";
+export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { usePushNotifications } from "@/components/PushNotificationProvider";
