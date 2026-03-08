@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>(["[INFO] Dashboard inicializado","[INFO] Aguardando comando do operador"]);
   const { isSupported, isPermissionGranted, fcmToken, requestPermission, error: pushError } = usePushNotifications();
 
-  const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const [supabase] = useState(() => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!));
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
