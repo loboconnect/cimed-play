@@ -1,13 +1,8 @@
+cat << 'EOF' > app/dashboard/page.tsx
 "use client";
-export const dynamic = "force-dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { usePushNotifications } from "@/components/PushNotificationProvider";
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
@@ -15,12 +10,17 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>(["[INFO] Dashboard inicializado"]);
   const { isSupported, isPermissionGranted, requestPermission, error: pushError } = usePushNotifications();
 
+  const supabase = useMemo(() => createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ), []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { window.location.href = '/login'; return; }
       setUser(session.user);
     });
-  }, []);
+  }, [supabase]);
 
   const handleLogout = async () => { await supabase.auth.signOut(); window.location.href = '/login'; };
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString("pt-BR")}] ${msg}`]);
@@ -66,3 +66,4 @@ export default function Dashboard() {
     </div>
   );
 }
+EOF
