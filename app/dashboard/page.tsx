@@ -1,4 +1,3 @@
-cat << 'EOF' > app/dashboard/page.tsx
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
