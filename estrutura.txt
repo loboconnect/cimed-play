@@ -36379,10 +36379,10 @@ commonjs
 esm
 
 ./node_modules/google-auth-library/node_modules/rimraf/dist/commonjs:
-default-tmp.d.ts
-default-tmp.d.ts.map
-default-tmp.js
-default-tmp.js.map
+default-.d.ts
+default-.d.ts.map
+default-.js
+default-.js.map
 fix-eperm.d.ts
 fix-eperm.d.ts.map
 fix-eperm.js
@@ -36450,10 +36450,10 @@ bin.d.mts
 bin.d.mts.map
 bin.mjs
 bin.mjs.map
-default-tmp.d.ts
-default-tmp.d.ts.map
-default-tmp.js
-default-tmp.js.map
+default-.d.ts
+default-.d.ts.map
+default-.js
+default-.js.map
 fix-eperm.d.ts
 fix-eperm.d.ts.map
 fix-eperm.js
