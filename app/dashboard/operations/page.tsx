@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { createBrowserClient } from '@supabase/ssr'
 import { User } from '@supabase/supabase-js'
 import OperationalConsole from '@/components/OperationalConsole'
 
@@ -15,16 +15,22 @@ export default function OperationsPage() {
   const [userRole, setUserRole] = useState<string>('')
   const router = useRouter()
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-      setUser(user)
-      const { data: userData } = await supabase
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.push('/login'); return }
+      setUser(session.user)
+      const { data: userData, error: queryError } = await supabase
         .from('users')
         .select('role')
-        .eq('email', user.email)
+        .eq('email', session.user.email)
         .single()
+      console.log('userData:', userData, 'error:', queryError)
       if (userData?.role && ['operator', 'admin'].includes(userData.role)) {
         setUserRole(userData.role)
       } else {
@@ -32,11 +38,7 @@ export default function OperationsPage() {
       }
     }
     checkAuth()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) { router.push('/login') }
-    })
-    return () => subscription.unsubscribe()
-  }, [router])
+  }, [])
 
   const sendCommand = async (commandType: CommandType, payload: any = {}) => {
     setLoading(true)
