@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar role do usuário
     const { data: userData, error: userError } = await supabase
-      .from('Users')
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single()

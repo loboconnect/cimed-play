@@ -64,7 +64,7 @@ export default function OperationalConsole() {
 
           // Buscar dados do usuário que emitiu o comando
           const { data: userData } = await supabase
-            .from('Users')
+            .from('users')
             .select('email')
             .eq('id', payload.new.issuedBy)
             .single()

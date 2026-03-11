@@ -21,7 +21,7 @@ export default function OperationsPage() {
       if (!user) { router.push('/login'); return }
       setUser(user)
       const { data: userData } = await supabase
-        .from('Users')
+        .from('users')
         .select('role')
         .eq('email', user.email)
         .single()
