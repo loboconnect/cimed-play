@@ -28,7 +28,7 @@ export default function OperationsPage() {
 
       // Buscar role do usuário
       const { data: userData } = await supabase
-        .from('User')
+        .from('Users')
         .select('role')
         .eq('id', user.id)
         .single()
