@@ -1,67 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createServerClient } from '@supabase/ssr'
 import { sendPushNotification } from '@/lib/firebaseAdmin'
+import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Verificar role do usuário
-    const { data: userData, error: userError } = await supabase
+    const { data: userData } = await supabase
       .from('users')
       .select('role')
-      .eq('id', user.id)
+      .eq('email', user.email)
       .single()
 
-    if (userError || !userData || !['operator', 'admin'].includes(userData.role)) {
-      return NextResponse.json(
-        { error: 'Acesso negado. Role insuficiente.' },
-        { status: 403 }
-      )
+    if (!userData || !['operator', 'admin'].includes(userData.role)) {
+      return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
     }
 
-    // Parse do corpo da requisição
     const body = await request.json()
     const { commandType, payload } = body
 
     if (!commandType) {
-      return NextResponse.json(
-        { error: 'commandType é obrigatório' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'commandType é obrigatório' }, { status: 400 })
     }
 
-    // Validar tipos de comando permitidos
-    const allowedCommands = [
-      'START_OPERATION',
-      'STOP_OPERATION',
-      'TRIGGER_EFFECT',
-      'LOCK_SYSTEM',
-      'EMERGENCY_STOP'
-    ]
-
+    const allowedCommands = ['START_OPERATION', 'STOP_OPERATION', 'TRIGGER_EFFECT', 'LOCK_SYSTEM', 'EMERGENCY_STOP']
     if (!allowedCommands.includes(commandType)) {
-      return NextResponse.json(
-        { error: 'Tipo de comando inválido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Tipo de comando inválido' }, { status: 400 })
     }
 
-    // Inserir comando na tabela usando Supabase
     const { data: command, error: insertError } = await supabase
       .from('operational_commands')
       .insert({
         command_type: commandType,
         payload: payload || {},
-        issued_by: user.id,
+        issued_by: user.email,
         status: 'pending'
       })
       .select()
@@ -69,67 +64,27 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Erro ao inserir comando:', insertError)
-      return NextResponse.json(
-        { error: 'Erro ao salvar comando' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Erro ao salvar comando' }, { status: 500 })
     }
 
-    // Log de auditoria
-    await supabase
-      .from('LogAuditoria')
-      .insert({
-        userId: user.id,
-        acao_detalhada: `Comando operacional emitido: ${commandType}`,
-        ip_origem: request.headers.get('x-forwarded-for') || 'unknown',
-        dado_antes: '',
-        dado_depois: JSON.stringify({ commandId: command.id, commandType, payload })
-      })
-
-    // Disparar notificação push para comandos críticos
     const criticalCommands = ['EMERGENCY_STOP', 'LOCK_SYSTEM']
     if (criticalCommands.includes(commandType)) {
       try {
-        // Buscar email do usuário
-        const { data: userProfile } = await supabase.auth.admin.getUserById(user.id)
-
-        // Buscar tokens FCM de todos os operadores (exceto o emissor)
         const { data: deviceTokens } = await supabase
           .from('device_tokens')
           .select('fcm_token')
-          .neq('user_id', user.id)
 
         if (deviceTokens && deviceTokens.length > 0) {
-          const tokens = deviceTokens.map(dt => dt.fcm_token)
-
-          const notificationPayload = {
-            title: '🚨 ALERTA CRÍTICO - Synapse',
-            body: `${commandType.replace('_', ' ')}\nExecutado por: ${user.email || 'Operador'}\n${new Date().toLocaleString('pt-BR')}`,
-            severity: 'high' as const,
-            data: {
-              type: 'critical_command',
-              commandType,
-              commandId: command.id,
-              operator: userProfile.user?.email || 'Operador',
-              timestamp: new Date().toISOString()
-            }
-          }
-
-          // Enviar notificação em background (não bloquear resposta)
-          sendPushNotification(tokens, "🚨 ALERTA CRÍTICO - Synapse", notificationPayload.body, notificationPayload.data)
-            .then(response => {
-              console.log(`Critical notification sent for ${commandType}:`, {
-                successCount: response.successCount,
-                failureCount: response.failureCount
-              })
-            })
-            .catch(error => {
-              console.error(`Failed to send critical notification for ${commandType}:`, error)
-            })
+          const tokens = deviceTokens.map((dt: any) => dt.fcm_token)
+          sendPushNotification(
+            tokens,
+            '🚨 ALERTA CRÍTICO - Synapse',
+            `${commandType.replace('_', ' ')} executado por: ${user.email}`,
+            { type: 'critical_command', commandType, commandId: command.id }
+          ).catch(console.error)
         }
       } catch (notificationError) {
-        // Não falhar a operação se a notificação falhar
-        console.error('Error sending critical notification:', notificationError)
+        console.error('Erro na notificação:', notificationError)
       }
     }
 
@@ -144,10 +99,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Erro ao processar comando operacional:', error)
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    )
+    console.error('Erro ao processar comando:', error)
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
