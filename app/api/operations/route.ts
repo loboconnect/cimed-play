@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       .insert({
         command_type: commandType,
         payload: payload || {},
-        issued_by: user.email,
+        issued_by: user.id,
         status: 'pending'
       })
       .select()
