@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function LoginPage() {
@@ -8,7 +7,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,7 +18,7 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setError(error.message); setLoading(false) } else { router.push('/dashboard'); router.refresh() }
+    if (error) { setError(error.message); setLoading(false) } else { setTimeout(() => { window.location.href = '/dashboard' }, 500) }
   }
 
   return (
