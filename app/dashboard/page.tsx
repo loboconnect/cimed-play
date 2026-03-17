@@ -5,6 +5,7 @@ import { createBrowserClient } from "@supabase/ssr";
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isVertical, setIsVertical] = useState(true);
   const [youtubeKey, setYoutubeKey] = useState("");
   const [vimeoKey, setVimeoKey] = useState("");
   const [logs, setLogs] = useState<string[]>(["[INFO] CIMED PLAY Dashboard inicializado"]);
@@ -22,6 +23,16 @@ export default function Dashboard() {
       setUser(session.user);
     });
   }, [supabase]);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      if (videoRef.current && videoRef.current.videoWidth > 0) {
+        setIsVertical(videoRef.current.videoHeight > videoRef.current.videoWidth);
+      }
+    };
+    const interval = setInterval(checkOrientation, 500);
+    return () => clearInterval(interval);
+  }, [isStreaming]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -57,6 +68,7 @@ export default function Dashboard() {
       videoRef.current.srcObject = null;
     }
     setIsStreaming(false);
+    setIsVertical(true);
     addLog("Transmissão encerrada.");
   };
 
@@ -85,14 +97,20 @@ export default function Dashboard() {
 
         <div className="bg-black rounded-lg border border-[#FFC600] p-6">
           <h2 className="text-lg font-bold text-[#FFC600] mb-4">Monitor PGM</h2>
-          <div className="relative bg-[#2D2926] rounded-lg overflow-hidden" style={{aspectRatio: "16/9"}}>
+          <div
+            className="relative bg-[#2D2926] rounded-lg overflow-hidden mx-auto"
+            style={isVertical
+              ? { aspectRatio: "9/16", maxWidth: "300px" }
+              : { aspectRatio: "16/9", width: "100%" }
+            }
+          >
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
               className="w-full h-full"
-              style={{objectFit: "contain"}}
+              style={{ objectFit: "cover" }}
             />
             {!isStreaming && (
               <div className="absolute inset-0 flex items-center justify-center">
