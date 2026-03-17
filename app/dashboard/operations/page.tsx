@@ -75,7 +75,7 @@ export default function OperationsPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-bold">Centro de Operações Synapse</h1>
+          <h1 className="text-4xl font-bold">Centro de Operações CIMED PLAY</h1>
           <p className="text-gray-400 mt-2">Operador: {user.email} | Role: {userRole}</p>
         </div>
         <div className="flex gap-4">

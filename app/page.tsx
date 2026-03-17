@@ -2,21 +2,21 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-[#2D2926]">
       <div className="text-center space-y-8">
         <div className="space-y-4">
-          <h1 className="text-5xl font-bold text-white">
-            Painel de Controle
+          <h1 className="text-5xl font-bold text-[#FFC600] tracking-widest">
+            CIMED PLAY
           </h1>
           <p className="text-xl text-gray-400">
-            Sistema de Transmissão Digital - Campanha 2026
+            Plataforma de Entretenimento Esportivo e Streaming Digital
           </p>
         </div>
 
         <div className="flex gap-4 justify-center">
           <Link
             href="/dashboard"
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+            className="px-8 py-3 bg-[#FFC600] hover:opacity-90 text-[#2D2926] rounded-lg font-bold transition-opacity"
           >
             Ir para Dashboard
           </Link>
