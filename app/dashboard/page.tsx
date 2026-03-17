@@ -5,7 +5,6 @@ import { createBrowserClient } from "@supabase/ssr";
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isVertical, setIsVertical] = useState(true);
   const [youtubeKey, setYoutubeKey] = useState("");
   const [vimeoKey, setVimeoKey] = useState("");
   const [logs, setLogs] = useState<string[]>(["[INFO] CIMED PLAY Dashboard inicializado"]);
@@ -24,16 +23,6 @@ export default function Dashboard() {
     });
   }, [supabase]);
 
-  useEffect(() => {
-    const checkOrientation = () => {
-      if (videoRef.current && videoRef.current.videoWidth > 0) {
-        setIsVertical(videoRef.current.videoHeight > videoRef.current.videoWidth);
-      }
-    };
-    const interval = setInterval(checkOrientation, 500);
-    return () => clearInterval(interval);
-  }, [isStreaming]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/login";
@@ -49,9 +38,7 @@ export default function Dashboard() {
         audio: true
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      if (videoRef.current) videoRef.current.srcObject = stream;
       setIsStreaming(true);
       addLog("Câmera ativada. Transmissão iniciada.");
     } catch (err) {
@@ -64,11 +51,8 @@ export default function Dashboard() {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setIsStreaming(false);
-    setIsVertical(true);
     addLog("Transmissão encerrada.");
   };
 
@@ -97,24 +81,18 @@ export default function Dashboard() {
 
         <div className="bg-black rounded-lg border border-[#FFC600] p-6">
           <h2 className="text-lg font-bold text-[#FFC600] mb-4">Monitor PGM</h2>
-          <div
-            className="relative bg-[#2D2926] rounded-lg overflow-hidden mx-auto"
-            style={isVertical
-              ? { aspectRatio: "9/16", maxWidth: "300px" }
-              : { aspectRatio: "16/9", width: "100%" }
-            }
-          >
+          <div className="relative bg-black rounded-lg overflow-hidden w-full" style={{aspectRatio: "16/9"}}>
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-full"
-              style={{ objectFit: "cover" }}
+              className="absolute inset-0 w-full h-full"
+              style={{objectFit: "contain"}}
             />
             {!isStreaming && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-500 text-lg">OFFLINE</span>
+                <span className="text-gray-600 text-lg">OFFLINE</span>
               </div>
             )}
             {isStreaming && (
@@ -141,32 +119,21 @@ export default function Dashboard() {
           <div className="bg-black rounded-lg border border-gray-700 p-6">
             <h2 className="text-lg font-bold text-[#FFC600] mb-4">YouTube Live</h2>
             <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Chave de stream do YouTube"
-                value={youtubeKey}
+              <input type="text" placeholder="Chave de stream do YouTube" value={youtubeKey}
                 onChange={(e) => setYoutubeKey(e.target.value)}
                 className="flex-1 px-4 py-2 bg-[#2D2926] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
               />
-              <button onClick={handleYoutubeConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">
-                Conectar
-              </button>
+              <button onClick={handleYoutubeConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">Conectar</button>
             </div>
           </div>
-
           <div className="bg-black rounded-lg border border-gray-700 p-6">
             <h2 className="text-lg font-bold text-[#FFC600] mb-4">Vimeo Backup</h2>
             <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Chave de stream do Vimeo"
-                value={vimeoKey}
+              <input type="text" placeholder="Chave de stream do Vimeo" value={vimeoKey}
                 onChange={(e) => setVimeoKey(e.target.value)}
                 className="flex-1 px-4 py-2 bg-[#2D2926] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
               />
-              <button onClick={handleVimeoConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">
-                Conectar
-              </button>
+              <button onClick={handleVimeoConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">Conectar</button>
             </div>
           </div>
         </div>
