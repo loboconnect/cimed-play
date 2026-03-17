@@ -23,6 +23,30 @@ export default function Dashboard() {
     });
   }, [supabase]);
 
+  useEffect(() => {
+    if (!isStreaming) return;
+    const handleOrientationChange = async () => {
+      await new Promise(r => setTimeout(r, 500));
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: true
+        });
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch (err) {}
+    };
+    window.addEventListener("orientationchange", handleOrientationChange);
+    screen.orientation?.addEventListener("change", handleOrientationChange);
+    return () => {
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      screen.orientation?.removeEventListener("change", handleOrientationChange);
+    };
+  }, [isStreaming]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/login";
