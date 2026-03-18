@@ -1,0 +1,54 @@
+:root {
+  --cimed-yellow: #FFC600;
+  --cimed-dark: #2D2926;
+  --cimed-gray: #1A1A1A;
+  --cimed-success: #4CAF50;
+  --cimed-warning: #FF9800;
+}
+
+/* Estilos globais */
+body {
+  background-color: var(--cimed-gray);
+  color: white;
+  font-family: sans-serif;
+}
+
+/* Botões com estilo CIMED */
+button.bg-yellow-500,
+button[type="submit"] {
+  background-color: var(--cimed-yellow) !important;
+  color: var(--cimed-dark) !important;
+  border-radius: 4px !important;
+  padding: 8px 16px !important;
+  font-weight: bold !important;
+  border: none !important;
+}
+
+/* Inputs com estilo CIMED — inclui autocomplete */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  background-color: white !important;
+  color: var(--cimed-dark) !important;
+  padding: 10px !important;
+  font-size: 16px !important;
+}
+
+/* Força estilo mesmo com autocomplete do navegador */
+input[type="email"]:not(:placeholder-shown),
+input[type="password"]:not(:placeholder-shown),
+input[type="text"]:not(:placeholder-shown) {
+  background-color: white !important;
+  color: var(--cimed-dark) !important;
+}
+
+/* Força estilo mesmo com preenchimento automático do navegador */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: var(--cimed-dark) !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  color: var(--cimed-dark) !important;
+}
