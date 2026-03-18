@@ -3,14 +3,14 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
 export default function Dashboard() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [youtubeKey, setYoutubeKey] = useState("");
   const [vimeoKey, setVimeoKey] = useState("");
   const [logs, setLogs] = useState(["[INFO] CIMED PLAY Dashboard inicializado"]);
-  const [cameraOrientation, setCameraOrientation] = useState("portrait");
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream>(null);
+  const [orientation, setOrientation] = useState("portrait");
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   const supabase = useMemo(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,31 +18,19 @@ export default function Dashboard() {
   ), []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({  { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { window.location.href = "/login"; return; }
       setUser(session.user);
     });
   }, [supabase]);
 
+  // Detectar orientação do dispositivo (apenas para CSS, não reinicia stream)
   useEffect(() => {
-    if (!isStreaming || !streamRef.current) return;
-    
-    const checkCameraOrientation = () => {
-      const video = videoRef.current;
-      if (!video || video.videoWidth === 0) return;
-      
-      if (video.videoWidth > video.videoHeight) {
-        setCameraOrientation("landscape");
-      } else {
-        setCameraOrientation("portrait");
-      }
-    };
-
-    const interval = setInterval(checkCameraOrientation, 500);
-    checkCameraOrientation();
-    
-    return () => clearInterval(interval);
-  }, [isStreaming]);
+    const handleResize = () => setOrientation(window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isStreaming) return;
@@ -109,7 +97,7 @@ export default function Dashboard() {
     setTimeout(() => addLog("YouTube: ✅ Transmissão simulada com sucesso!"), 2000);
   };
 
-  if (!user) return <div>Carregando...</div>;
+  if (!user) return (<div>Carregando...</div>);
 
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-white p-4">
@@ -124,28 +112,38 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 gap-4">
-        <div className="bg-black rounded-lg overflow-hidden relative" style={{ aspectRatio: "16/9" }}>
+        {/* Monitor PGM — Estilo YouTube Live */}
+        <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center"
+             style={{ minHeight: orientation === "portrait" ? "60vh" : "50vh" }}>
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="absolute inset-0 w-full h-full"
+            className={orientation === "portrait" ? "h-full w-auto" : "w-full h-auto"}
             style={{
-              objectFit: cameraOrientation === "portrait" ? "contain" : "cover",
+              aspectRatio: orientation === "portrait" ? "9/16" : "16/9",
+              objectFit: "cover",
               backgroundColor: "#000"
             }}
           />
           <div className="absolute top-2 right-2 px-3 py-1 bg-red-600 rounded font-bold text-sm">
             {isStreaming ? "AO VIVO" : "OFFLINE"}
           </div>
-          {isStreaming && (
-            <div className="absolute top-2 left-2 px-3 py-1 bg-[#FFC600] text-[#2D2926] rounded font-bold text-xs">
-              {cameraOrientation === "portrait" ? "📱 9:16" : "🔄 16:9"}
-            </div>
-          )}
+          <div className="absolute top-2 left-2 px-3 py-1 bg-[#FFC600] text-[#2D2926] rounded font-bold text-xs">
+            {orientation === "portrait" ? "📱 9:16" : "🔄 16:9"}
+          </div>
         </div>
 
+        {/* Indicador de Orientação */}
+        <div className="p-3 bg-[#2D2926] rounded-lg text-center">
+          <p className="text-sm text-gray-400">Orientação do Dispositivo</p>
+          <p className="text-xl font-bold text-[#FFC600]">
+            {orientation === "landscape" ? "🔄 Horizontal" : "📱 Vertical"}
+          </p>
+        </div>
+
+        {/* Controles de Transmissão */}
         <div className="flex gap-2">
           <button
             onClick={handleStartStream}
@@ -163,6 +161,7 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* YouTube Live */}
         <div className="p-4 bg-[#2D2926] rounded-lg">
           <h2 className="text-lg font-bold mb-2">## YouTube Live</h2>
           <div className="flex gap-2">
@@ -189,6 +188,7 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Vimeo Backup */}
         <div className="p-4 bg-[#2D2926] rounded-lg">
           <h2 className="text-lg font-bold mb-2">## Vimeo Backup</h2>
           <div className="flex gap-2">
@@ -208,6 +208,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Logs */}
         <div className="p-4 bg-[#2D2926] rounded-lg">
           <h2 className="text-lg font-bold mb-2">## Logs</h2>
           <div className="space-y-1 max-h-48 overflow-y-auto">
