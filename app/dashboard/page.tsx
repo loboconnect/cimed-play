@@ -24,7 +24,7 @@ export default function Dashboard() {
     });
   }, [supabase]);
 
-  // Detectar orientação do dispositivo
+  // Detectar orientação do dispositivo (apenas para CSS, não reinicia stream)
   useEffect(() => {
     const handleResize = () => setOrientation(window.innerWidth > window.innerHeight ? "landscape" : "portrait");
     handleResize();
@@ -112,17 +112,26 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* Monitor PGM */}
-        <div className="bg-black rounded-lg overflow-hidden relative">
+        {/* Monitor PGM — Estilo YouTube Live */}
+        <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center"
+             style={{ minHeight: orientation === "portrait" ? "60vh" : "50vh" }}>
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-auto"
+            className={orientation === "portrait" ? "h-full w-auto" : "w-full h-auto"}
+            style={{
+              aspectRatio: orientation === "portrait" ? "9/16" : "16/9",
+              objectFit: "cover",
+              backgroundColor: "#000"
+            }}
           />
           <div className="absolute top-2 right-2 px-3 py-1 bg-red-600 rounded font-bold text-sm">
             {isStreaming ? "AO VIVO" : "OFFLINE"}
+          </div>
+          <div className="absolute top-2 left-2 px-3 py-1 bg-[#FFC600] text-[#2D2926] rounded font-bold text-xs">
+            {orientation === "portrait" ? "📱 9:16" : "🔄 16:9"}
           </div>
         </div>
 
