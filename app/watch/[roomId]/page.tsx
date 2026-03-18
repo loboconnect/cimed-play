@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 
 export default function WatchPage() {
@@ -10,41 +10,57 @@ export default function WatchPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [status, setStatus] = useState("Conectando...");
+  const retryRef = useRef<any>(null);
 
-  useEffect(() => {
+  const connect = useCallback(async () => {
     if (!roomId) return;
+    if (peerRef.current) { peerRef.current.destroy(); peerRef.current = null; }
 
-    const connect = async () => {
-      const { Peer } = await import("peerjs");
-      const peer = new Peer();
-      peerRef.current = peer;
+    const { Peer } = await import("peerjs");
+    const peer = new Peer();
+    peerRef.current = peer;
 
-      peer.on("open", () => {
-        setStatus("Aguardando transmissão...");
+    peer.on("open", () => {
+      setStatus("Aguardando transmissão...");
+      try {
         const call = peer.call(roomId, new MediaStream());
         if (call) {
           call.on("stream", (remoteStream) => {
             if (videoRef.current) {
               videoRef.current.srcObject = remoteStream;
-              videoRef.current.play();
+              videoRef.current.play().catch(() => {});
             }
             setIsConnected(true);
             setStatus("AO VIVO");
+            if (retryRef.current) { clearInterval(retryRef.current); retryRef.current = null; }
           });
+          call.on("error", () => { scheduleRetry(); });
+          call.on("close", () => { setIsConnected(false); setStatus("Transmissão encerrada."); });
+        } else {
+          scheduleRetry();
         }
-      });
+      } catch { scheduleRetry(); }
+    });
 
-      peer.on("error", () => {
-        setStatus("Transmissão não encontrada. Verifique o link.");
-      });
-    };
+    peer.on("error", () => { scheduleRetry(); });
+  }, [roomId]);
 
+  const scheduleRetry = useCallback(() => {
+    if (retryRef.current) return;
+    setStatus("Aguardando transmissão...");
+    retryRef.current = setTimeout(() => {
+      retryRef.current = null;
+      connect();
+    }, 3000);
+  }, [connect]);
+
+  useEffect(() => {
     connect();
-
     return () => {
+      if (retryRef.current) clearTimeout(retryRef.current);
       if (peerRef.current) peerRef.current.destroy();
     };
-  }, [roomId]);
+  }, [connect]);
 
   const togglePiP = async () => {
     if (!videoRef.current) return;
@@ -56,9 +72,7 @@ export default function WatchPage() {
         await videoRef.current.requestPictureInPicture();
         setIsPiP(true);
       }
-    } catch {
-      alert("Picture-in-Picture não suportado neste navegador");
-    }
+    } catch { alert("Picture-in-Picture não suportado neste navegador"); }
   };
 
   return (
@@ -67,16 +81,9 @@ export default function WatchPage() {
         <h1 className="text-2xl font-bold text-[#FFC600]">CIMED PLAY</h1>
         <a href="/" className="px-4 py-2 bg-gray-700 rounded font-bold text-sm">Início</a>
       </header>
-
       <main className="p-6">
         <div className="relative bg-black rounded-lg overflow-hidden w-full mb-4" style={{aspectRatio: "16/9"}}>
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="absolute inset-0 w-full h-full"
-            style={{objectFit: "contain"}}
-          />
+          <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full" style={{objectFit: "contain"}} />
           {!isConnected && (
             <div className="absolute inset-0 flex items-center justify-center flex-col gap-3">
               <div className="w-8 h-8 border-4 border-[#FFC600] border-t-transparent rounded-full animate-spin" />
@@ -90,21 +97,15 @@ export default function WatchPage() {
             </div>
           )}
           {isConnected && (
-            <button
-              onClick={togglePiP}
-              className="absolute bottom-4 right-4 px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold shadow-lg"
-            >
+            <button onClick={togglePiP} className="absolute bottom-4 right-4 px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold shadow-lg">
               {isPiP ? "🔲 Fechar Flutuante" : "🖼️ Modo Flutuante"}
             </button>
           )}
         </div>
-
         <div className="bg-[#2D2926] rounded-lg p-4">
-          <p className="text-sm text-gray-400">
-            {isConnected ? "Você está assistindo a transmissão ao vivo da CIMED PLAY." : status}
-          </p>
+          <p className="text-sm text-gray-400">{isConnected ? "Você está assistindo a transmissão ao vivo da CIMED PLAY." : status}</p>
         </div>
       </main>
     </div>
   );
-      }
+}
