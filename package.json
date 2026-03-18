@@ -1,35 +1,36 @@
 {
-      "name": "campanha-digital-2026",
-      "version": "1.0.0",
-      "private": true,
-      "scripts": {
-            "dev": "next dev -p 5000 -H 0.0.0.0",
-            "build": "next build",
-            "start": "next start -p 5000 -H 0.0.0.0",
-            "lint": "eslint . --ext .js,.ts,.tsx",
-            "format": "prettier --write .",
-            "test": "echo \"No tests yet\" && exit 0"
-      },
-      "peerjs": "^1.5.2": {
-            "@prisma/client": "^7.4.2",
-            "@supabase/ssr": "^0.9.0",
-            "@supabase/supabase-js": "^2.98.0",
-            "autoprefixer": "10.4.14",
-            "firebase": "^12.10.0",
-            "firebase-admin": "^13.7.0",
-            "framer-motion": "10.12.16",
-            "next": "14.0.0",
-            "postcss": "8.4.27",
-            "prisma": "5.6.0",
-            "react": "18.2.0",
-            "react-dom": "18.2.0",
-            "tailwindcss": "3.3.3"
-      },
-      "devDependencies": {
-            "@types/react": "19.2.14",
-            "canvas": "^3.2.1",
-            "eslint": "8.48.0",
-            "eslint-config-next": "14.0.0",
-            "prettier": "3.8.1"
-      }
+  "name": "campanha-digital-2026",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 5000 -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start -p 5000 -H 0.0.0.0",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "format": "prettier --write .",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.4.2",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "autoprefixer": "10.4.14",
+    "firebase": "^12.10.0",
+    "firebase-admin": "^13.7.0",
+    "framer-motion": "10.12.16",
+    "next": "14.0.0",
+    "peerjs": "^1.5.2",
+    "postcss": "8.4.27",
+    "prisma": "5.6.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwindcss": "3.3.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "canvas": "^3.2.1",
+    "eslint": "8.48.0",
+    "eslint-config-next": "14.0.0",
+    "prettier": "3.8.1"
+  }
 }
