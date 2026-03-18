@@ -116,17 +116,28 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* YouTube Live */}
       <div className="p-4 bg-[#2D2926] rounded-lg mb-4">
         <h2 className="text-lg font-bold mb-2">YouTube Live</h2>
         <div className="flex gap-2 mb-2">
           <input type="text" placeholder="Chave de transmissão" value={youtubeKey} onChange={(e) => setYoutubeKey(e.target.value)} className="flex-1 px-4 py-2 bg-[#1A1A1A] border border-gray-600 rounded text-white" />
           <button className="px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold">Conectar</button>
         </div>
-        <button onClick={mockYouTubeStream} disabled={!isStreaming} className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded font-bold text-white">
+        <button onClick={mockYouTubeStream} disabled={!isStreaming} className="w-full mt-3 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded font-bold text-white">
           📺 Enviar para YouTube (Simular)
         </button>
       </div>
 
+      {/* Vimeo Backup - ADICIONADO AQUI ✅ */}
+      <div className="p-4 bg-[#2D2926] rounded-lg mb-4">
+        <h2 className="text-lg font-bold mb-2">Vimeo Backup</h2>
+        <div className="flex gap-2 mb-2">
+          <input type="text" placeholder="Chave de transmissão" value={vimeoKey} onChange={(e) => setVimeoKey(e.target.value)} className="flex-1 px-4 py-2 bg-[#1A1A1A] border border-gray-600 rounded text-white" />
+          <button className="px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold">Conectar</button>
+        </div>
+      </div>
+
+      {/* Logs */}
       <div className="p-4 bg-[#2D2926] rounded-lg">
         <h2 className="text-lg font-bold mb-2">Logs</h2>
         <div className="space-y-1 max-h-48 overflow-y-auto">
