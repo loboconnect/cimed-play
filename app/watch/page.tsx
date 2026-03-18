@@ -1,90 +1,110 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 
 export default function WatchPage() {
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [showPiP, setShowPiP] = useState(false);
-  const [orientation, setOrientation] = useState("portrait");
+  const params = useParams();
+  const roomId = params?.roomId as string;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const peerRef = useRef<any>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isPiP, setIsPiP] = useState(false);
+  const [status, setStatus] = useState("Conectando...");
 
-  // Detectar orientação da tela (para teste de responsividade)
   useEffect(() => {
-    const handleResize = () => {
-      setOrientation(window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+    if (!roomId) return;
+
+    const connect = async () => {
+      const { Peer } = await import("peerjs");
+      const peer = new Peer();
+      peerRef.current = peer;
+
+      peer.on("open", () => {
+        setStatus("Aguardando transmissão...");
+        const call = peer.call(roomId, new MediaStream());
+        if (call) {
+          call.on("stream", (remoteStream) => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = remoteStream;
+              videoRef.current.play();
+            }
+            setIsConnected(true);
+            setStatus("AO VIVO");
+          });
+        }
+      });
+
+      peer.on("error", () => {
+        setStatus("Transmissão não encontrada. Verifique o link.");
+      });
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsStreaming(true), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    connect();
+
+    return () => {
+      if (peerRef.current) peerRef.current.destroy();
+    };
+  }, [roomId]);
 
   const togglePiP = async () => {
-    const video = document.querySelector("video");
-    if (!video) return;
+    if (!videoRef.current) return;
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
-        setShowPiP(false);
+        setIsPiP(false);
       } else {
-        await video.requestPictureInPicture();
-        setShowPiP(true);
+        await videoRef.current.requestPictureInPicture();
+        setIsPiP(true);
       }
-    } catch (err) {
+    } catch {
       alert("Picture-in-Picture não suportado neste navegador");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-white p-4">
-      <header className="mb-6 p-4 bg-[#2D2926] rounded-lg flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-[#FFC600]">CIMED PLAY</h1>
-          <p className="text-sm">Transmissão ao Vivo • {orientation === "portrait" ? "📱 Vertical" : "🔄 Horizontal"}</p>
-        </div>
-        <a href="/" className="px-4 py-2 bg-gray-700 rounded font-bold">Início</a>
+    <div className="min-h-screen bg-[#1A1A1A] text-white">
+      <header className="px-6 py-4 bg-black border-b border-[#FFC600] flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-[#FFC600]">CIMED PLAY</h1>
+        <a href="/" className="px-4 py-2 bg-gray-700 rounded font-bold text-sm">Início</a>
       </header>
 
-      {/* Player Principal — SEMPRE RESPONSIVO */}
-      <div className="bg-black rounded-lg overflow-hidden relative mb-4" style={{ aspectRatio: "16/9" }}>
-        <video
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-          src={isStreaming ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" : undefined}
-        />
-        {!isStreaming && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-xl">Aguardando transmissão...</p>
-              <p className="text-sm text-gray-400 mt-2">Operador deve iniciar no Dashboard</p>
+      <main className="p-6">
+        <div className="relative bg-black rounded-lg overflow-hidden w-full mb-4" style={{aspectRatio: "16/9"}}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full"
+            style={{objectFit: "contain"}}
+          />
+          {!isConnected && (
+            <div className="absolute inset-0 flex items-center justify-center flex-col gap-3">
+              <div className="w-8 h-8 border-4 border-[#FFC600] border-t-transparent rounded-full animate-spin" />
+              <span className="text-gray-400">{status}</span>
             </div>
-          </div>
-        )}
-        {isStreaming && (
-          <>
-            <div className="absolute top-2 right-2 px-3 py-1 bg-red-600 rounded font-bold text-sm">AO VIVO</div>
-            
-            {/* Botão Flutuante */}
-            <button 
+          )}
+          {isConnected && (
+            <div className="absolute top-3 left-3 flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-white text-sm font-bold">AO VIVO</span>
+            </div>
+          )}
+          {isConnected && (
+            <button
               onClick={togglePiP}
-              className="absolute bottom-4 right-4 px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold shadow-lg hover:bg-yellow-400 transition"
+              className="absolute bottom-4 right-4 px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold shadow-lg"
             >
-              {showPiP ? "🔲 Parar Flutuante" : "🖼️ Modo Flutuante"}
+              {isPiP ? "🔲 Fechar Flutuante" : "🖼️ Modo Flutuante"}
             </button>
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Informações Técnicas */}
-      <div className="p-4 bg-[#2D2926] rounded-lg">
-        <h2 className="text-lg font-bold mb-2">Detalhes</h2>
-        <p className="text-sm text-gray-400">WebRTC • Qualidade adaptativa • Funciona em Android/iOS/PC</p>
-        <p className="text-xs text-gray-500 mt-2">Para tirar print ou mostrar: gire seu celular entre vertical e horizontal</p>
-      </div>
+        <div className="bg-[#2D2926] rounded-lg p-4">
+          <p className="text-sm text-gray-400">
+            {isConnected ? "Você está assistindo a transmissão ao vivo da CIMED PLAY." : status}
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
