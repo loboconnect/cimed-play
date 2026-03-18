@@ -3,13 +3,14 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
 export default function Dashboard() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [youtubeKey, setYoutubeKey] = useState("");
   const [vimeoKey, setVimeoKey] = useState("");
-  const [logs, setLogs] = useState<string[]>(["[INFO] CIMED PLAY Dashboard inicializado"]);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [logs, setLogs] = useState(["[INFO] CIMED PLAY Dashboard inicializado"]);
+  const [orientation, setOrientation] = useState("portrait");
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   const supabase = useMemo(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,14 @@ export default function Dashboard() {
       setUser(session.user);
     });
   }, [supabase]);
+
+  // Detectar orientação do dispositivo
+  useEffect(() => {
+    const handleResize = () => setOrientation(window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isStreaming) return;
@@ -82,100 +91,128 @@ export default function Dashboard() {
 
   const handleYoutubeConnect = () => { addLog("YouTube: integração em breve."); };
   const handleVimeoConnect = () => { addLog("Vimeo: integração em breve."); };
+  const mockYouTubeStream = () => {
+    if (!isStreaming) { addLog("YouTube: ⚠️ Inicie a transmissão primeiro."); return; }
+    addLog("YouTube: 🟡 SIMULANDO transmissão para YouTube Live...");
+    setTimeout(() => addLog("YouTube: ✅ Transmissão simulada com sucesso!"), 2000);
+  };
 
-  if (!user) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#2D2926] text-[#FFC600] text-xl">
-      Carregando...
-    </div>
-  );
+  if (!user) return (<div>Carregando...</div>);
 
   return (
-    <div className="min-h-screen bg-[#2D2926] text-white">
-      <header className="bg-black px-6 py-4 flex justify-between items-center border-b border-[#FFC600]">
-        <h1 className="text-2xl font-bold text-[#FFC600] tracking-widest">CIMED PLAY</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm">{user.email}</span>
-          <button onClick={handleLogout} className="px-4 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">
-            Sair
-          </button>
+    <div className="min-h-screen bg-[#1A1A1A] text-white p-4">
+      <header className="mb-6 p-4 bg-[#2D2926] rounded-lg flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-[#FFC600]">CIMED PLAY</h1>
+          <p className="text-sm">Operador: {user.email}</p>
         </div>
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 rounded font-bold">
+          Sair
+        </button>
       </header>
 
-      <main className="p-6 space-y-6">
+      <div className="grid grid-cols-1 gap-4">
+        {/* Monitor PGM */}
+        <div className="bg-black rounded-lg overflow-hidden relative">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-auto"
+          />
+          <div className="absolute top-2 right-2 px-3 py-1 bg-red-600 rounded font-bold text-sm">
+            {isStreaming ? "AO VIVO" : "OFFLINE"}
+          </div>
+        </div>
 
-        <div className="bg-black rounded-lg border border-[#FFC600] p-6">
-          <h2 className="text-lg font-bold text-[#FFC600] mb-4">Monitor PGM</h2>
-          <div className="relative bg-black rounded-lg overflow-hidden w-full" style={{aspectRatio: "16/9"}}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full"
-              style={{objectFit: "contain"}}
+        {/* Indicador de Orientação */}
+        <div className="p-3 bg-[#2D2926] rounded-lg text-center">
+          <p className="text-sm text-gray-400">Orientação do Dispositivo</p>
+          <p className="text-xl font-bold text-[#FFC600]">
+            {orientation === "landscape" ? "🔄 Horizontal" : "📱 Vertical"}
+          </p>
+        </div>
+
+        {/* Controles de Transmissão */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleStartStream}
+            disabled={isStreaming}
+            className="flex-1 px-4 py-3 bg-[#FFC600] text-[#2D2926] rounded font-bold disabled:opacity-50"
+          >
+            ▶ Iniciar Transmissão
+          </button>
+          <button
+            onClick={handleStopStream}
+            disabled={!isStreaming}
+            className="flex-1 px-4 py-3 bg-red-600 text-white rounded font-bold disabled:opacity-50"
+          >
+            ⏹ Encerrar Transmissão
+          </button>
+        </div>
+
+        {/* YouTube Live */}
+        <div className="p-4 bg-[#2D2926] rounded-lg">
+          <h2 className="text-lg font-bold mb-2">## YouTube Live</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Chave de transmissão"
+              value={youtubeKey}
+              onChange={(e) => setYoutubeKey(e.target.value)}
+              className="flex-1 px-4 py-2 bg-[#1A1A1A] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
             />
-            {!isStreaming && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-gray-600 text-lg">OFFLINE</span>
-              </div>
-            )}
-            {isStreaming && (
-              <div className="absolute top-3 left-3 flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                <span className="text-white text-sm font-bold">AO VIVO</span>
-              </div>
-            )}
+            <button
+              onClick={handleYoutubeConnect}
+              className="px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold"
+            >
+              Conectar
+            </button>
           </div>
-          <div className="mt-4 flex gap-4">
-            {!isStreaming ? (
-              <button onClick={handleStartStream} className="px-6 py-3 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">
-                ▶ Iniciar Transmissão
-              </button>
-            ) : (
-              <button onClick={handleStopStream} className="px-6 py-3 bg-red-600 text-white font-bold rounded hover:opacity-90">
-                ⏹ Encerrar Transmissão
-              </button>
-            )}
+          <button
+            onClick={mockYouTubeStream}
+            disabled={!isStreaming}
+            className="w-full mt-3 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded font-bold text-white transition"
+          >
+            📺 Enviar para YouTube Live (Simular)
+          </button>
+        </div>
+
+        {/* Vimeo Backup */}
+        <div className="p-4 bg-[#2D2926] rounded-lg">
+          <h2 className="text-lg font-bold mb-2">## Vimeo Backup</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Chave de transmissão"
+              value={vimeoKey}
+              onChange={(e) => setVimeoKey(e.target.value)}
+              className="flex-1 px-4 py-2 bg-[#1A1A1A] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
+            />
+            <button
+              onClick={handleVimeoConnect}
+              className="px-4 py-2 bg-[#FFC600] text-[#2D2926] rounded font-bold"
+            >
+              Conectar
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-black rounded-lg border border-gray-700 p-6">
-            <h2 className="text-lg font-bold text-[#FFC600] mb-4">YouTube Live</h2>
-            <div className="flex gap-3">
-              <input type="text" placeholder="Chave de stream do YouTube" value={youtubeKey}
-                onChange={(e) => setYoutubeKey(e.target.value)}
-                className="flex-1 px-4 py-2 bg-[#2D2926] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
-              />
-              <button onClick={handleYoutubeConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">Conectar</button>
-            </div>
-          </div>
-          <div className="bg-black rounded-lg border border-gray-700 p-6">
-            <h2 className="text-lg font-bold text-[#FFC600] mb-4">Vimeo Backup</h2>
-            <div className="flex gap-3">
-              <input type="text" placeholder="Chave de stream do Vimeo" value={vimeoKey}
-                onChange={(e) => setVimeoKey(e.target.value)}
-                className="flex-1 px-4 py-2 bg-[#2D2926] border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC600]"
-              />
-              <button onClick={handleVimeoConnect} className="px-5 py-2 bg-[#FFC600] text-[#2D2926] font-bold rounded hover:opacity-90">Conectar</button>
-            </div>
+        {/* Logs */}
+        <div className="p-4 bg-[#2D2926] rounded-lg">
+          <h2 className="text-lg font-bold mb-2">## Logs</h2>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {logs.map((log, i) => (
+              <p key={i} className="text-xs font-mono text-gray-300">{log}</p>
+            ))}
           </div>
         </div>
 
-        <div className="bg-black rounded-lg border border-gray-700 p-6">
-          <h2 className="text-lg font-bold text-[#FFC600] mb-4">Logs</h2>
-          <div className="bg-[#2D2926] rounded p-4 h-40 overflow-y-auto font-mono text-sm">
-            {logs.map((log, i) => <div key={i} className="text-gray-300">{log}</div>)}
-          </div>
-        </div>
-
-        <div className="text-center">
-          <a href="/dashboard/operations" className="inline-block px-6 py-3 border border-[#FFC600] text-[#FFC600] font-bold rounded hover:bg-[#FFC600] hover:text-[#2D2926] transition-colors">
-            Acessar Centro de Operações
-          </a>
-        </div>
-
-      </main>
+        <a href="/dashboard/operations" className="block text-center px-4 py-3 bg-[#FFC600] text-[#2D2926] rounded font-bold">
+          Acessar Centro de Operações →
+        </a>
+      </div>
     </div>
   );
 }
