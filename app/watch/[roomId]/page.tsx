@@ -10,20 +10,19 @@ export default function WatchPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [status, setStatus] = useState("Conectando...");
-  const retryRef = useRef<any>(null);
 
   const connect = useCallback(async () => {
     if (!roomId) return;
     if (peerRef.current) { peerRef.current.destroy(); peerRef.current = null; }
-
     const { Peer } = await import("peerjs");
     const peer = new Peer();
     peerRef.current = peer;
-
-    peer.on("open", () => {
+    peer.on("open", async () => {
       setStatus("Aguardando transmissão...");
       try {
-        const call = peer.call(roomId, new MediaStream());
+        const fakeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const call = peer.call(roomId, fakeStream);
+        fakeStream.getTracks().forEach(t => t.stop());
         if (call) {
           call.on("stream", (remoteStream) => {
             if (videoRef.current) {
@@ -32,34 +31,17 @@ export default function WatchPage() {
             }
             setIsConnected(true);
             setStatus("AO VIVO");
-            if (retryRef.current) { clearInterval(retryRef.current); retryRef.current = null; }
           });
-          call.on("error", () => { scheduleRetry(); });
           call.on("close", () => { setIsConnected(false); setStatus("Transmissão encerrada."); });
-        } else {
-          scheduleRetry();
         }
-      } catch { scheduleRetry(); }
+      } catch { setStatus("Erro ao conectar. Tente novamente."); }
     });
-
-    peer.on("error", () => { scheduleRetry(); });
+    peer.on("error", () => { setTimeout(() => connect(), 3000); });
   }, [roomId]);
-
-  const scheduleRetry = useCallback(() => {
-    if (retryRef.current) return;
-    setStatus("Aguardando transmissão...");
-    retryRef.current = setTimeout(() => {
-      retryRef.current = null;
-      connect();
-    }, 3000);
-  }, [connect]);
 
   useEffect(() => {
     connect();
-    return () => {
-      if (retryRef.current) clearTimeout(retryRef.current);
-      if (peerRef.current) peerRef.current.destroy();
-    };
+    return () => { if (peerRef.current) peerRef.current.destroy(); };
   }, [connect]);
 
   const togglePiP = async () => {
